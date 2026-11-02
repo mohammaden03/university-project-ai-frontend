@@ -1,0 +1,6 @@
+{
+  "name": "Manuscript AI",
+  "description": "Intelligent Manuscript Recognition & Research Assistant for Persian and Arabic historical manuscripts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

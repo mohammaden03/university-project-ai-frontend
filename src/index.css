@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-sans: 'Vazirmatn', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-manuscript: 'Amiri', 'Traditional Arabic', 'Scheherazade New', serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* Custom scrollbar for academic reading feel */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(168, 162, 158, 0.35);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(168, 162, 158, 0.55);
+  }
+}
+
+.font-manuscript {
+  font-family: var(--font-manuscript);
+}
