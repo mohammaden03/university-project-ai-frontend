@@ -6,7 +6,8 @@
 import { apiClient } from './api';
 import { mockService } from './mockService';
 import { useAuthStore } from '../stores/authStore';
-import { ChatMessage, Attachment } from '../types';
+import { ChatMessage, Attachment, SourceCitation } from '../types';
+import { SSEStreamParser } from '../utils/sseParser';
 
 export const chatService = {
   async getMessages(conversationId: string): Promise<ChatMessage[]> {
@@ -37,11 +38,12 @@ export const chatService = {
     content: string,
     onChunk: (chunk: string) => void,
     onDone: (message: ChatMessage) => void,
-    onError: (err: any) => void
+    onError: (err: any) => void,
+    onSource?: (source: SourceCitation) => void
   ) {
     if (useAuthStore.getState().useMockApi) {
       // Simulate smooth chunk streaming
-      const userMsg = await mockService.sendMessage(conversationId, content);
+      await mockService.sendMessage(conversationId, content);
       let streamedResponse = '';
       const fullText =
         'پاسخ تحلیلی دستیار هوشمند با بررسی مراجع و متون نسخ خطی...';
@@ -88,15 +90,35 @@ export const chatService = {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder('utf-8');
       let accumulated = '';
+      const sources: SourceCitation[] = [];
+
+      const parser = new SSEStreamParser({
+        onToken: (tok) => {
+          accumulated += tok;
+          onChunk(tok);
+        },
+        onSource: (src) => {
+          sources.push(src);
+          onSource?.(src);
+        },
+        onError: (errMsg) => {
+          onError(new Error(errMsg));
+        },
+        onComplete: (full) => {
+          if (full && !accumulated) {
+            accumulated = full;
+          }
+        },
+      });
 
       if (reader) {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           const text = decoder.decode(value, { stream: true });
-          accumulated += text;
-          onChunk(text);
+          parser.feed(text);
         }
+        parser.flush();
       }
 
       onDone({
@@ -104,6 +126,7 @@ export const chatService = {
         conversation_id: conversationId,
         sender: 'assistant',
         content: accumulated,
+        sources: sources.length > 0 ? sources : undefined,
         timestamp: new Date().toISOString(),
       });
     } catch (err) {

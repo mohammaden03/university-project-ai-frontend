@@ -42,6 +42,7 @@ export interface Attachment {
   file_size: number;
   mime_type: string;
   preview_url?: string;
+  file_path?: string;
 }
 
 export interface LineBoundingBox {

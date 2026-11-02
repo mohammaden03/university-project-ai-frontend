@@ -22,7 +22,7 @@ export const uploadService = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const res = await apiClient.post<Attachment>('/uploads', formData, {
+    const res = await apiClient.post<any>('/uploads', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -34,6 +34,18 @@ export const uploadService = {
       },
     });
 
-    return res.data;
+    const data = res.data;
+    const filePath = data.file_path || data.url || '';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+
+    return {
+      id: data.id || 'att_' + Date.now(),
+      url: filePath.startsWith('http') ? filePath : `${baseUrl}/storage/${filePath}`,
+      file_path: filePath,
+      preview_url: URL.createObjectURL(file),
+      file_name: file.name,
+      file_size: file.size,
+      mime_type: file.type,
+    };
   },
 };

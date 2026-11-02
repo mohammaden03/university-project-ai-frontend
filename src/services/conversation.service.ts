@@ -14,7 +14,10 @@ export const conversationService = {
       return mockService.getConversations();
     }
     const res = await apiClient.get('/chat/conversations');
-    return res.data;
+    return (res.data || []).map((c: any) => ({
+      ...c,
+      mode: (c.mode?.toLowerCase() as ConversationMode) || 'ocr',
+    }));
   },
 
   async getConversation(id: string): Promise<Conversation> {
@@ -22,15 +25,22 @@ export const conversationService = {
       return mockService.getConversation(id);
     }
     const res = await apiClient.get(`/chat/conversations/${id}`);
-    return res.data;
+    return {
+      ...res.data,
+      mode: (res.data.mode?.toLowerCase() as ConversationMode) || 'ocr',
+    };
   },
 
   async createConversation(mode: ConversationMode, title?: string): Promise<Conversation> {
     if (useAuthStore.getState().useMockApi) {
       return mockService.createConversation(mode, title);
     }
-    const res = await apiClient.post('/chat/conversations', { mode, title });
-    return res.data;
+    const backendMode = mode.toUpperCase();
+    const res = await apiClient.post('/chat/conversations', { mode: backendMode, title });
+    return {
+      ...res.data,
+      mode: (res.data.mode?.toLowerCase() as ConversationMode) || mode,
+    };
   },
 
   async deleteConversation(id: string): Promise<void> {
